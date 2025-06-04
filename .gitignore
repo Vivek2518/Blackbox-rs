@@ -1,0 +1,16 @@
+# Rust build artifacts
+target/
+
+# Generated log files
+*.bbin
+*.log
+
+# Editor/IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS-specific files
+.DS_Store
+Thumbs.db
