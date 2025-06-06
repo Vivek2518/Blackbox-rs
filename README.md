@@ -113,8 +113,7 @@ Submit issues or pull requests for bugs, features, or improvements via GitHub.
 
 If you find this project useful, consider supporting development:
 
-GitHub Sponsors (Update with your link)
-PayPal (Update with your link)
+Feel free to reach out
 
 ## Contact
 

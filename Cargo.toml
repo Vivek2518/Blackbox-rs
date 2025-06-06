@@ -7,7 +7,7 @@ authors = ["Vivek Patwari <vivekpatwari38@gmail.com>"]
 license = "GPL-3.0"
 repository = "https://github.com/Vivek2518/Blackbox-rs"
 keywords = ["mavlink", "drone", "logging", "replay", "robotics"]
-categories = ["embedded", "serialization"]
+categories = ["embedded", "encoding"]
 
 [lib]
 name = "blackboxer"
