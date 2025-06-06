@@ -23,7 +23,7 @@ fn main() -> std::io::Result<()> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 3 {
-        eprintln!("Usage: {} <file.bbin> <tcp_target> [--filter=MSG_TYPE] [--realtime]", args[0]);
+        eprintln!("Usage: {} <file.bbin> <tcp_target> [--filter=MSG_TYPE] [--realtime] [--speed=VALUE]", args[0]);
         return Ok(());
     }
 
@@ -32,6 +32,16 @@ fn main() -> std::io::Result<()> {
     let filter_arg = args.iter().find(|a| a.starts_with("--filter="));
     let filter = filter_arg.map(|s| s.trim_start_matches("--filter=").to_string());
     let realtime = args.contains(&"--realtime".to_string());
+    let speed_arg = args.iter().find(|a| a.starts_with("--speed="));
+    let speed: f32 = speed_arg
+        .map(|s| s.trim_start_matches("--speed="))
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(1.0); // Default to 1.0 (normal speed) if not specified or invalid
+
+    if speed <= 0.0 {
+        eprintln!("Error: --speed must be a positive value");
+        return Ok(());
+    }
 
     let mut stream = TcpStream::connect(target)?;
     println!("Connected to {}", target);
@@ -66,12 +76,13 @@ fn main() -> std::io::Result<()> {
                 }
             }
 
-            // Optional delay simulation
+            // Optional delay simulation with speed adjustment
             if realtime {
                 if let Some(prev) = prev_time {
                     let delta = header.timestamp - prev;
                     if delta > 0 {
-                        sleep(Duration::from_millis(delta as u64));
+                        let adjusted_delta = (delta as f64 / speed as f64) as u64;
+                        sleep(Duration::from_millis(adjusted_delta));
                     }
                 }
                 prev_time = Some(header.timestamp);
