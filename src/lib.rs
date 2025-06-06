@@ -3,32 +3,28 @@ use mavlink::MavHeader;
 use std::io::{self, Read, BufReader, Write};
 use std::net::TcpStream;
 use std::time::Duration;
-use chrono::{DateTime, Utc};
+use chrono::{Utc};
 use std::fs::File;
 use serde::{Serialize, Deserialize};
-#[allow(unused_imports)]
-use bincode::{serialize, deserialize};
+use bincode::{serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct LoggedMessage {
-    pub timestamp: DateTime<Utc>,
-    pub header: MavHeaderSerializable,
-    pub message: MavMessage,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MavHeaderSerializable {
+pub struct LoggedMessageHeader {
+    pub timestamp: i64, // milliseconds since UNIX epoch
     pub sequence: u8,
     pub system_id: u8,
     pub component_id: u8,
+    pub msg_len: u16,
 }
 
-impl From<MavHeader> for MavHeaderSerializable {
-    fn from(header: MavHeader) -> Self {
+impl LoggedMessageHeader {
+    pub fn from_mav_header(timestamp: i64, header: MavHeader, msg_len: usize) -> Self {
         Self {
+            timestamp,
             sequence: header.sequence,
             system_id: header.system_id,
             component_id: header.component_id,
+            msg_len: msg_len as u16,
         }
     }
 }
@@ -41,7 +37,6 @@ pub struct BlackBoxerConfig {
 
 pub struct BlackBoxer {
     stream: TcpStream,
-    buffer: Vec<LoggedMessage>,
     is_armed: bool,
     config: BlackBoxerConfig,
 }
@@ -84,16 +79,22 @@ impl BbinWriter {
         })
     }
 
-    fn write_message(&mut self, msg: &LoggedMessage) -> io::Result<()> {
-        let msg_bytes = serialize(msg).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-        self.file.write_all(&msg_bytes)?;
-        let msg_type = format!("{:?}", msg.message);
+    fn write_message_raw(&mut self, timestamp: i64, header: MavHeader, raw_msg_bytes: &[u8]) -> io::Result<()> {
+        let logged_header = LoggedMessageHeader::from_mav_header(timestamp, header, raw_msg_bytes.len());
+        // Serialize header + timestamp with bincode
+        let header_bytes = serialize(&logged_header).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+        self.file.write_all(&header_bytes)?;
+        // Write raw MAVLink message bytes directly (not serialized)
+        self.file.write_all(raw_msg_bytes)?;
+
+        // Save index
+        let msg_type = "MavMessage"; // Improve by extracting exact message type string if needed
         self.index.push(BbinIndexEntry {
-            message_type: msg_type,
+            message_type: msg_type.to_string(),
             offset: self.current_offset,
-            timestamp: msg.timestamp.timestamp_millis(),
+            timestamp,
         });
-        self.current_offset += msg_bytes.len() as u64;
+        self.current_offset += (header_bytes.len() + raw_msg_bytes.len()) as u64;
         Ok(())
     }
 
@@ -106,6 +107,13 @@ impl BbinWriter {
         self.file.write_all(&footer_bytes)?;
         Ok(())
     }
+
+    /// Call this to finalize the file before closing
+    pub fn finalize(&mut self) -> io::Result<()> {
+        self.save_index()?;
+        self.file.flush()?;
+        Ok(())
+    }
 }
 
 impl BlackBoxer {
@@ -116,7 +124,6 @@ impl BlackBoxer {
         println!("TCP connection established with {}", config.addr);
         Ok(BlackBoxer {
             stream,
-            buffer: Vec::new(),
             is_armed: false,
             config,
         })
@@ -126,6 +133,7 @@ impl BlackBoxer {
         let mut reader = BufReader::new(&self.stream);
         let mut buf = [0u8; 512];
         let mut bbin_writer = BbinWriter::new(&format!("mavlink_log_{}.bbin", Utc::now().format("%Y%m%d_%H%M%S")))?;
+
         println!("Monitoring for arm/disarm events...");
 
         loop {
@@ -142,25 +150,17 @@ impl BlackBoxer {
                                         if new_armed != self.is_armed {
                                             self.is_armed = new_armed;
                                             println!("Vehicle {}armed", if new_armed { "" } else { "dis" });
-                                            if !new_armed && !self.buffer.is_empty() {
-                                                for msg in &self.buffer {
-                                                    bbin_writer.write_message(msg)?;
-                                                }
-                                                bbin_writer.save_index()?;
-                                                self.buffer.clear();
-                                            }
                                         }
                                     }
                                     _ => {
                                         if !self.config.armed_only || self.is_armed {
-                                            let logged_msg = LoggedMessage {
-                                                timestamp,
-                                                header: header.into(),
-                                                message: msg,
-                                            };
-                                            self.buffer.push(logged_msg.clone());
-                                            bbin_writer.write_message(&logged_msg)?;
-                                            println!("Captured message: {:?}", logged_msg.message);
+                                            let mut raw_msg_bytes = Vec::new();
+                                            mavlink::write_v2_msg(&mut raw_msg_bytes, header, &msg)
+                                                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+
+                                            bbin_writer.write_message_raw(timestamp.timestamp_millis(), header, &raw_msg_bytes)?;
+
+                                            println!("Captured message: {:?}", msg);
                                         }
                                     }
                                 }
@@ -181,9 +181,13 @@ impl BlackBoxer {
                 }
                 Err(e) => {
                     eprintln!("TCP Read error: {:?}", e);
-                    return Err(e);
+                    break; // Exit loop on error to finalize
                 }
             }
         }
+
+        // Finalize the BBIN file on exiting the loop
+        bbin_writer.finalize()?;
+        Ok(())
     }
 }
