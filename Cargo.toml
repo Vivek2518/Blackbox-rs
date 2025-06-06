@@ -21,3 +21,7 @@ path = "src/main.rs"
 [[bin]]
 name = "read_bbin"
 path = "src/read_bbin.rs"
+
+[[bin]]
+name = "replay_bbin"
+path = "src/replay_bbin.rs"
