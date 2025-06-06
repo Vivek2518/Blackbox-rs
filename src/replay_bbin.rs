@@ -40,7 +40,7 @@ fn main() -> std::io::Result<()> {
     let mut reader = BufReader::new(file);
 
     let mut prev_time: Option<i64> = None;
-    let start = Instant::now();
+    let _start = Instant::now();
 
     loop {
         let header: LoggedMessageHeader = match deserialize_from(&mut reader) {
