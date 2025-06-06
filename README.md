@@ -45,25 +45,22 @@ bincode (v1.3)
 
 ## Usage
 1. **Capture MAVLink Messages**
+
 Captures MAVLink messages from a TCP endpoint and logs them to a .bbin file.
 ```
 cargo run --bin mavlink-capture -- [ADDRESS] [--armed-only]
 
 ```
 
-
 ADDRESS: TCP address to connect to (default: 127.0.0.1:14552).
-```
 --armed-only: Only log messages when the vehicle is armed.
-
-```
-
 Example:cargo run --bin mavlink-capture -- 127.0.0.1:14550 --armed-only
 Outputs a file like mavlink_log_20250606_191100.bbin.
 
 
 
 2. **Read BBIN Files**
+
 Reads and displays messages from a .bbin file.
 ```
 cargo run --bin read-bbin -- <FILE> [--show] [--filter=MSG_TYPE]
@@ -78,6 +75,7 @@ Example:cargo run --bin read-bbin -- mavlink_log_20250606_191100.bbin --show --f
 
 
 3. **Replay BBIN Files**
+
 Replays messages from a .bbin file to a TCP target.
 ```
 cargo run --bin replay-bbin -- <FILE> <TCP_TARGET> [--filter=MSG_TYPE] [--realtime] [--speed=VALUE]
@@ -94,6 +92,7 @@ Example:cargo run --bin replay-bbin -- mavlink_log_20250606_191100.bbin 127.0.0.
 
 
 ## Library Usage
+
 Use the library in your Rust code to integrate MAVLink logging:
 ```
 use blackboxer::{BlackBoxer, BlackBoxerConfig};
@@ -119,6 +118,7 @@ src/bin/read_bbin.rs: Binary for reading logs.
 src/bin/replay_bbin.rs: Binary for replaying logs.
 
 ## License
+
 This project is licensed under the GNU General Public License v3 (GPL-3.0). Derivative works must be open-sourced under GPL-3.0. See the LICENSE file for details.
 Contributing
 
@@ -126,6 +126,7 @@ Fork the repo at https://github.com/Vivek2518/Blackbox-rs.
 Submit issues or pull requests for bugs, features, or improvements via GitHub.
 
 ## Support
+
 If you find this project useful, consider supporting development:
 
 GitHub Sponsors (Update with your link)
