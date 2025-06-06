@@ -1,27 +1,32 @@
 [package]
-name = "blackboxer_new"
+name = "blackboxer"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
+description = "A Rust library for capturing, logging, and replaying MAVLink messages"
+authors = ["Vivek Patwari <vivekpatwari38@gmail.com>"]
+license = "GPL-3.0"
+repository = "https://github.com/Vivek2518/Blackbox-rs"
+keywords = ["mavlink", "drone", "logging", "replay", "robotics"]
+categories = ["embedded", "serialization"]
 
 [lib]
 name = "blackboxer"
 path = "src/lib.rs"
 
 [dependencies]
-chrono = { version = "0.4", features = ["serde"] }
+chrono = "0.4"
 serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
 mavlink = "0.11"
 bincode = "1.3"
 
 [[bin]]
-name = "blackboxer_new"
-path = "src/main.rs"
+name = "mavlink-capture"
+path = "src/bin/main.rs"
 
 [[bin]]
-name = "read_bbin"
-path = "src/read_bbin.rs"
+name = "read-bbin"
+path = "src/bin/read_bbin.rs"
 
 [[bin]]
-name = "replay_bbin"
-path = "src/replay_bbin.rs"
+name = "replay-bbin"
+path = "src/bin/replay_bbin.rs"
