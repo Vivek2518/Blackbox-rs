@@ -14,14 +14,14 @@ A Rust library and set of tools for capturing, logging, and replaying MAVLink me
 1. Ensure you have [Rust](https://www.rust-lang.org/tools/install) installed.
 2. Add the library to your project:
  ```
-   cargo add blackboxer
+cargo add blackboxer
 ```
  Or, include in your Cargo.toml:
 
 [dependencies]
 
 ```
-   blackboxer = "0.1.0"
+blackboxer = "0.1.0"
 ```
 For binaries, clone the repository and build:git clone https://github.com/Vivek2518/Blackbox-rs.git
 
