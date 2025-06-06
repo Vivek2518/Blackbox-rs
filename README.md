@@ -15,19 +15,19 @@ A Rust library and set of tools for capturing, logging, and replaying MAVLink me
 2. Add the library to your project:
  ```
    cargo add blackboxer
+```
+ Or, include in your Cargo.toml:
 
-   Or, include in your Cargo.toml:
-
-   [dependencies]
-
-   blackboxer = "0.1.0"
+[dependencies]
 
 ```
+   blackboxer = "0.1.0"
+```
 For binaries, clone the repository and build:git clone https://github.com/Vivek2518/Blackbox-rs.git
+
 ```
 cd Blackbox-rs
 cargo build --release
-
 ```
 
 
@@ -40,7 +40,6 @@ mavlink crate (v0.11)
 chrono (v0.4)
 serde (v1.0, with derive feature)
 bincode (v1.3)
-
 ```
 
 ## Usage
@@ -49,7 +48,6 @@ bincode (v1.3)
 Captures MAVLink messages from a TCP endpoint and logs them to a .bbin file.
 ```
 cargo run --bin mavlink-capture -- [ADDRESS] [--armed-only]
-
 ```
 
 ADDRESS: TCP address to connect to (default: 127.0.0.1:14552).
@@ -64,7 +62,6 @@ Outputs a file like mavlink_log_20250606_191100.bbin.
 Reads and displays messages from a .bbin file.
 ```
 cargo run --bin read-bbin -- <FILE> [--show] [--filter=MSG_TYPE]
-
 ```
 
 <FILE>: Path to the .bbin file.
@@ -79,7 +76,6 @@ Example:cargo run --bin read-bbin -- mavlink_log_20250606_191100.bbin --show --f
 Replays messages from a .bbin file to a TCP target.
 ```
 cargo run --bin replay-bbin -- <FILE> <TCP_TARGET> [--filter=MSG_TYPE] [--realtime] [--speed=VALUE]
-
 ```
 
 <FILE>: Path to the .bbin file.
@@ -107,7 +103,6 @@ fn main() -> io::Result<()> {
     blackboxer.capture_messages()?;
     Ok(())
 }
-
 ```
 
 ## Project Structure
