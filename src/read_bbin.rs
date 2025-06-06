@@ -9,9 +9,9 @@ use mavlink::ardupilotmega::MavMessage;
 #[derive(Debug, Deserialize)]
 struct LoggedMessageHeader {
     timestamp: i64,
-    sequence: u8,
-    system_id: u8,
-    component_id: u8,
+    _sequence: u8,
+    _system_id: u8,
+    _component_id: u8,
     msg_len: u16,
 }
 
