@@ -96,10 +96,13 @@ fn main() -> io::Result<()> {
 
 ## Project Structure
 
-src/lib.rs: Core library with BlackBoxer and BbinWriter for logging.
-src/bin/main.rs: Binary for capturing messages.
-src/bin/read_bbin.rs: Binary for reading logs.
-src/bin/replay_bbin.rs: Binary for replaying logs.
+**src/lib.rs**: Core library with BlackBoxer and BbinWriter for logging.
+
+**src/bin/main.rs**: Binary for capturing messages.
+
+**src/bin/read_bbin.rs**: Binary for reading logs.
+
+**src/bin/replay_bbin.rs**: Binary for replaying logs.
 
 ## License
 
