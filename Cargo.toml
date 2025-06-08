@@ -1,6 +1,6 @@
 [package]
 name = "blackboxer"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 description = "A Rust library for capturing, logging, and replaying MAVLink messages"
 authors = ["Vivek Patwari <vivekpatwari38@gmail.com>"]
