@@ -24,6 +24,10 @@ name = "mavlink-capture"
 path = "src/bin/main.rs"
 
 [[bin]]
+name = "read-collect"
+path = "src/bin/read_collect.rs"
+
+[[bin]]
 name = "read-bbin"
 path = "src/bin/read_bbin.rs"
 

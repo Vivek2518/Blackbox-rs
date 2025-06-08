@@ -29,7 +29,7 @@ cargo add blackboxer
 [dependencies]
 
 ```
-blackboxer = "0.1.0"
+blackboxer = "0.1.2"
 ```
 For binaries, clone the repository and build:git clone https://github.com/Vivek2518/Blackbox-rs.git
 
@@ -74,6 +74,14 @@ Replays messages from a .bbin file to a TCP target.
 cargo run --bin replay-bbin -- <FILE> <TCP_TARGET> [--filter=MSG_TYPE] [--realtime] [--speed=VALUE]
 ```
 
+4. **Read and Collect BBIN Data**
+
+Reads and collect data from a .bbin file for displaying data to User Interface.
+
+```
+cargo run --bin read-collect -- <FILE> [-- filter=MSG_TYPE]
+```
+
 
 ## Library Usage
 
@@ -98,11 +106,13 @@ fn main() -> io::Result<()> {
 
 **src/lib.rs**: Core library with BlackBoxer and BbinWriter for logging.
 
-**src/bin/main.rs**: Binary for capturing messages.
+**src/bin/main.rs**: Binary for capturing messages (Through CLI).
 
-**src/bin/read_bbin.rs**: Binary for reading logs.
+**src/bin/read_bbin.rs**: Binary for reading logs (Through CLI).
 
-**src/bin/replay_bbin.rs**: Binary for replaying logs.
+**src/bin/replay_bbin.rs**: Binary for replaying logs (Through CLI).
+
+**src/bin/read_collect.rs**:Binary for display data for UI.
 
 ## License
 
