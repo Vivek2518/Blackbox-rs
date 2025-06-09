@@ -1,5 +1,8 @@
-use blackboxer::{BlackBoxer, BlackBoxerConfig};
+use blackboxer::{BlackBoxer, BlackBoxerConfig, LoggedMessage};
+use mavlink::Message;
 use std::env;
+use std::sync::mpsc;
+use std::thread;
 
 fn main() -> std::io::Result<()> {
     let args: Vec<String> = env::args().collect();
@@ -11,7 +14,23 @@ fn main() -> std::io::Result<()> {
         addr,
     };
 
+    let (tx, rx) = mpsc::channel::<LoggedMessage>();
+
+    // Spawn thread to receive and print messages (simulate UI)
+   thread::spawn(move || {
+    while let Ok(msg) = rx.recv() {
+        println!(
+            "[UI DEBUG] {} @ {}\n    Data: {:?}",
+            msg.message.message_name(),
+            msg.timestamp,
+            msg.message
+        );
+    }
+});
+
+
     let mut blackboxer = BlackBoxer::new(config)?;
-    blackboxer.capture_messages()?;
+    blackboxer.capture_messages(tx)?;
+
     Ok(())
 }

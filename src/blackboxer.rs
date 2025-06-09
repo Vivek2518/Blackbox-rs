@@ -1,9 +1,10 @@
-
 use crate::bbin_writer::BbinWriter;
+use crate::types::LoggedMessage;
 use mavlink::{read_v2_msg, write_v2_msg, ardupilotmega::MavMessage};
 use std::io::{self, Read, BufReader};
 use std::net::TcpStream;
 use chrono::Utc;
+use std::sync::mpsc::Sender;
 
 #[derive(Debug)]
 pub struct BlackBoxerConfig {
@@ -30,7 +31,7 @@ impl BlackBoxer {
         })
     }
 
-    pub fn capture_messages(&mut self) -> io::Result<()> {
+    pub fn capture_messages(&mut self, ui_tx: Sender<LoggedMessage>) -> io::Result<()> {
         let mut reader = BufReader::new(&self.stream);
         let mut buf = [0u8; 512];
         let mut bbin_writer = BbinWriter::new(&format!("mavlink_log_{}.bbin", Utc::now().format("%Y%m%d_%H%M%S")))?;
@@ -45,23 +46,37 @@ impl BlackBoxer {
                         match read_v2_msg::<MavMessage, &[u8]>(&mut packet) {
                             Ok((header, msg)) => {
                                 let timestamp = Utc::now();
-                                match msg {
+
+                                match &msg {
                                     MavMessage::HEARTBEAT(heartbeat) => {
-                                        let new_armed = heartbeat.system_status == mavlink::ardupilotmega::MavState::MAV_STATE_ACTIVE;
+                                        let new_armed = heartbeat.system_status
+                                            == mavlink::ardupilotmega::MavState::MAV_STATE_ACTIVE;
                                         if new_armed != self.is_armed {
                                             self.is_armed = new_armed;
                                             println!("Vehicle {}armed", if new_armed { "" } else { "dis" });
                                         }
                                     }
-                                    _ => {
-                                        if !self.config.armed_only || self.is_armed {
-                                            let mut raw_msg_bytes = Vec::new();
-                                            write_v2_msg(&mut raw_msg_bytes, header, &msg)
-                                                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-                                            bbin_writer.write_message_raw(timestamp.timestamp_millis(), header, &raw_msg_bytes)?;
-                                            println!("Captured message: {:?}", msg);
-                                        }
-                                    }
+                                    _ => {}
+                                }
+
+                                if !self.config.armed_only || self.is_armed {
+                                    let mut raw_msg_bytes = Vec::new();
+                                    write_v2_msg(&mut raw_msg_bytes, header, &msg)
+                                        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+
+                                    bbin_writer.write_message_raw(
+                                        timestamp.timestamp_millis(),
+                                        header,
+                                        &raw_msg_bytes,
+                                    )?;
+
+                                    let logged_msg = LoggedMessage {
+                                        timestamp: timestamp.timestamp_millis(),
+                                        message: msg.clone(), // Ensure MavMessage derives Clone
+                                    };
+
+                                    let _ = ui_tx.send(logged_msg); // send to UI
+                                    println!("Captured message: {:?}", msg);
                                 }
                             }
                             Err(e) => {
