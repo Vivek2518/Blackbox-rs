@@ -4,7 +4,7 @@ A Rust library and set of tools for capturing, logging, and replaying MAVLink me
 
 ## Features
 
-- **Capture**: Connects to a MAVLink endpoint (e.g., `127.0.0.1:14552`) and logs messages to a `.bbin` file.
+- **Capture**: Connects to a MAVLink endpoint and logs messages to a `.bbin` file.
 
 - **Read**: Parses and displays logged messages from `.bbin` files.
 
@@ -29,7 +29,7 @@ cargo add blackboxer
 [dependencies]
 
 ```
-blackboxer = "0.1.2"
+blackboxer = "0.1.3"
 ```
 For binaries, clone the repository and build:git clone https://github.com/Vivek2518/Blackbox-rs.git
 
