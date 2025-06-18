@@ -29,7 +29,7 @@ cargo add blackboxer
 [dependencies]
 
 ```
-blackboxer = "0.1.3"
+blackboxer = "0.1.4"
 ```
 For binaries, clone the repository and build:git clone https://github.com/Vivek2518/Blackbox-rs.git
 
