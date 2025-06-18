@@ -26,6 +26,8 @@ impl LoggedMessageHeader {
 pub struct LoggedMessage {
     pub timestamp: i64,
     pub message: mavlink::ardupilotmega::MavMessage,
+    pub is_armed: bool,
+    pub message_type: String,
 }
 
 #[derive(Serialize, Deserialize)]

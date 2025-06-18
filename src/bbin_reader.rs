@@ -96,6 +96,8 @@ impl BbinReader {
                     messages.push(LoggedMessage {
                         timestamp: header.timestamp,
                         message: msg,
+                        is_armed: false,
+                        message_type: msg_type_str,
                     });
                 }
                 Err(e) => {

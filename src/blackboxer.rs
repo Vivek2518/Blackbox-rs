@@ -5,6 +5,7 @@ use std::io::{self, Read, BufReader};
 use std::net::TcpStream;
 use chrono::Utc;
 use std::sync::mpsc::Sender;
+use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
 
 #[derive(Debug)]
 pub struct BlackBoxerConfig {
@@ -31,7 +32,12 @@ impl BlackBoxer {
         })
     }
 
-    pub fn capture_messages(&mut self, ui_tx: Sender<LoggedMessage>) -> io::Result<()> {
+    /// Captures MAVLink messages and pushes them to the UI in real time.
+    ///
+    /// # Arguments
+    /// * `ui_tx` - Sender for pushing messages to the UI
+    /// * `stop_flag` - Arc<AtomicBool> flag to signal stopping the capture loop
+    pub fn capture_messages(&mut self, ui_tx: Sender<LoggedMessage>, stop_flag: Arc<AtomicBool>) -> io::Result<()> {
         let mut reader = BufReader::new(&self.stream);
         let mut buf = [0u8; 512];
         let mut bbin_writer = BbinWriter::new(&format!("mavlink_log_{}.bbin", Utc::now().format("%Y%m%d_%H%M%S")))?;
@@ -39,6 +45,11 @@ impl BlackBoxer {
         println!("Monitoring for arm/disarm events...");
 
         loop {
+            // Check stop flag at the start of each loop
+            if stop_flag.load(Ordering::Relaxed) {
+                println!("Stop flag set. Exiting capture loop.");
+                break;
+            }
             match reader.read(&mut buf) {
                 Ok(amt) if amt > 0 => {
                     let mut packet = &buf[..amt];
@@ -54,6 +65,14 @@ impl BlackBoxer {
                                         if new_armed != self.is_armed {
                                             self.is_armed = new_armed;
                                             println!("Vehicle {}armed", if new_armed { "" } else { "dis" });
+                                            
+                                            // Send arm state change to UI
+                                            let _ = ui_tx.send(LoggedMessage {
+                                                timestamp: timestamp.timestamp_millis(),
+                                                message: msg.clone(),
+                                                is_armed: new_armed,
+                                                message_type: "ARM_STATE".to_string(),
+                                            });
                                         }
                                     }
                                     _ => {}
@@ -70,12 +89,15 @@ impl BlackBoxer {
                                         &raw_msg_bytes,
                                     )?;
 
+                                    // Send message to UI with enhanced information
                                     let logged_msg = LoggedMessage {
                                         timestamp: timestamp.timestamp_millis(),
-                                        message: msg.clone(), // Ensure MavMessage derives Clone
+                                        message: msg.clone(),
+                                        is_armed: self.is_armed,
+                                        message_type: format!("{:?}", msg),
                                     };
 
-                                    let _ = ui_tx.send(logged_msg); // send to UI
+                                    let _ = ui_tx.send(logged_msg);
                                     println!("Captured message: {:?}", msg);
                                 }
                             }
